@@ -5,12 +5,10 @@
 package com.wittakarn.bpm.context;
 
 import com.wittakarn.bpm.BPM;
-import com.wittakarn.bpm.domain.User;
 import com.wittakarn.bpm.domain.WorkItem;
 import com.wittakarn.bpm.exception.WorkflowException;
 import com.wittakarn.bpm.oracle.OracleBPMImpl;
 import java.io.Serializable;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
