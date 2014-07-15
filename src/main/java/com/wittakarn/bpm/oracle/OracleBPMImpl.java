@@ -7,6 +7,13 @@ package com.wittakarn.bpm.oracle;
 import com.wittakarn.bpm.BPM;
 import com.wittakarn.bpm.constant.WorkflowConstant;
 import com.wittakarn.bpm.domain.WorkItem;
+import com.wittakarn.bpm.exception.CancelClaimTaskException;
+import com.wittakarn.bpm.exception.ClaimTaskException;
+import com.wittakarn.bpm.exception.CompleteTaskException;
+import com.wittakarn.bpm.exception.CountTaskException;
+import com.wittakarn.bpm.exception.InitialTaskException;
+import com.wittakarn.bpm.exception.SearchTaskException;
+import com.wittakarn.bpm.exception.UpdateTaskException;
 import com.wittakarn.bpm.exception.WorkflowException;
 import com.wittakarn.bpm.utils.DateUtils;
 import com.wittakarn.bpm.utils.StringUtils;
@@ -63,7 +70,7 @@ public class OracleBPMImpl implements BPM {
      *
      * @return HashMap of taskName, value
      */
-    public Object countTask(WorkItem workItem) throws WorkflowException {
+    public Object countTask(WorkItem workItem) throws CountTaskException {
         int countValue = 0;
         String taskName = null;
         String processId = null;
@@ -110,7 +117,7 @@ public class OracleBPMImpl implements BPM {
 
             return hashMap;
         } catch (Exception e) {
-            throw new WorkflowException(e);
+            throw new CountTaskException(e);
         } finally {
             taskName = null;
             wfWrapper = null;
@@ -130,7 +137,7 @@ public class OracleBPMImpl implements BPM {
      *
      * @return List of HashMap of individual column data
      */
-    public Object searchTask(WorkItem workItem) throws WorkflowException {
+    public Object searchTask(WorkItem workItem) throws SearchTaskException {
         logger.info("searchTask Start.");
         boolean isAdmin;
         String processId;
@@ -179,7 +186,7 @@ public class OracleBPMImpl implements BPM {
 
             return prepareReturnField(wfsClient, wfCtx, taskList, returnField);
         } catch (Exception e) {
-            throw new WorkflowException(e);
+            throw new SearchTaskException(e);
         } finally {
             taskList = null;
             logger.info("searchTask End.");
@@ -194,7 +201,7 @@ public class OracleBPMImpl implements BPM {
      *
      * @return HashMap<String, Object> of data
      */
-    public Object searchTaskByTaskId(WorkItem item) throws WorkflowException {
+    public Object searchTaskByTaskId(WorkItem item) throws SearchTaskException {
         String userId = "";
         String taskId = "";
         List<String> returnField = null;
@@ -213,7 +220,7 @@ public class OracleBPMImpl implements BPM {
 
             return prepareReturnField(wfsClient, wfCtx, taskId, returnField);
         } catch (Exception e) {
-            throw new WorkflowException(e);
+            throw new SearchTaskException(e);
         } finally {
             wfsClient = null;
             wfCtx = null;
@@ -231,7 +238,7 @@ public class OracleBPMImpl implements BPM {
      *
      * @return HashMap<String, Object> of data
      */
-    public Object claimTask(WorkItem workItem) throws WorkflowException {
+    public Object claimTask(WorkItem workItem) throws ClaimTaskException {
         HashMap<String, Object> hashMap = null;
         OracleItem oracleItem;
         try {
@@ -249,7 +256,7 @@ public class OracleBPMImpl implements BPM {
             return hashMap;
         } catch (Exception e) {
             logger.error("claimTask WorkflowException.", e);
-            throw new WorkflowException(e);
+            throw new ClaimTaskException(e);
         } finally {
             hashMap = null;
         }
@@ -265,7 +272,7 @@ public class OracleBPMImpl implements BPM {
      *
      * @return List of HashMap of individual column data
      */
-    public Object cancelClaimTask(WorkItem workItem) throws WorkflowException {
+    public Object cancelClaimTask(WorkItem workItem) throws CancelClaimTaskException {
         HashMap<String, Object> hashMap = null;
         String taskId = "";
         OracleWrapper wfWrapper = null;
@@ -293,7 +300,7 @@ public class OracleBPMImpl implements BPM {
             return hashMap;
         } catch (Exception e) {
             logger.error("cancelClaimTask WorkflowException.", e);
-            throw new WorkflowException(e);
+            throw new CancelClaimTaskException(e);
         } finally {
             wfWrapper = null;
             wfsClient = null;
@@ -309,7 +316,7 @@ public class OracleBPMImpl implements BPM {
      *
      * @return workItem
      */
-    public Object updateTask(WorkItem workItem) throws WorkflowException {
+    public Object updateTask(WorkItem workItem) throws UpdateTaskException {
         String userId = "";
         OracleWrapper wfWrapper = null;
         IWorkflowServiceClient wfsClient = null;
@@ -326,7 +333,7 @@ public class OracleBPMImpl implements BPM {
             return workItem;
         } catch (Exception e) {
             logger.error("claimTask WorkflowException.", e);
-            throw new WorkflowException(e);
+            throw new UpdateTaskException(e);
         } finally {
             wfWrapper = null;
             wfsClient = null;
@@ -334,7 +341,7 @@ public class OracleBPMImpl implements BPM {
         }
     }
 
-    public Object updateTask(List<WorkItem> workItem) throws WorkflowException {
+    public Object updateTask(List<WorkItem> workItem) throws UpdateTaskException {
         String userId = "";
         String password = "";
         OracleWrapper wfWrapper = null;
@@ -357,7 +364,7 @@ public class OracleBPMImpl implements BPM {
             return workItem;
         } catch (Exception e) {
             logger.error("claimTask WorkflowException.", e);
-            throw new WorkflowException(e);
+            throw new UpdateTaskException(e);
         } finally {
             wfWrapper = null;
             wfsClient = null;
@@ -375,7 +382,7 @@ public class OracleBPMImpl implements BPM {
      *
      * @return workItem
      */
-    public Object completeTask(WorkItem workItem) throws WorkflowException {
+    public Object completeTask(WorkItem workItem) throws CompleteTaskException {
         String userId = "";
         String password = "";
         OracleWrapper wfWrapper = null;
@@ -398,14 +405,14 @@ public class OracleBPMImpl implements BPM {
             return workItem;
         } catch (Exception e) {
             logger.error("completeTask WorkflowException.", e);
-            throw new WorkflowException(e);
+            throw new CompleteTaskException(e);
         } finally {
             wfWrapper = null;
             wfsClient = null;
         }
     }
 
-    public Object completeTask(List<WorkItem> workItem) throws WorkflowException {
+    public Object completeTask(List<WorkItem> workItem) throws CompleteTaskException {
         OracleWrapper wfWrapper = null;
         IWorkflowServiceClient wfsClient = null;
         try {
@@ -425,7 +432,7 @@ public class OracleBPMImpl implements BPM {
             return workItem;
         } catch (Exception e) {
             logger.error("completeTask WorkflowException.", e);
-            throw new WorkflowException(e);
+            throw new CompleteTaskException(e);
         } finally {
             wfWrapper = null;
             wfsClient = null;
@@ -598,7 +605,7 @@ public class OracleBPMImpl implements BPM {
     }
 
     @Override
-    public Object initialTask(WorkItem workItem) throws WorkflowException {
+    public Object initialTask(WorkItem workItem) throws InitialTaskException {
         try {
 //            WorkflowUtils.chooseProcessId(workItem);
 
