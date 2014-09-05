@@ -22,42 +22,14 @@ import java.util.List;
 public class BonitaClient {
 
     public static void main(String[] args) {
-        searchTaskAfterApplySingleton();
+        searchTask();
     }
     
     /*
     user:john,password:john,role:employee
     user:admin,password:bpm,role:leader
     */
-    private static void searchTaskBeforeApplySingleton(){
-        LeaveItem item;
-        BPMContext bpm;
-        try {
-
-            item = new LeaveItem(new BonitaItem());
-            item.setUserId("admin");
-            item.setPassword("bpm");
-            
-            bpm = new BPMContext(item);
-            
-            bpm.getBpm().searchTask(item);
-            
-//            item.setTaskId("60003");
-//            bpm.getBpm().completeTask(item);
-
-        } catch (WorkflowException we) {
-            we.printStackTrace();
-        } finally {
-            item = null;
-            bpm = null;
-        }
-    }
-    
-    /*
-    user:john,password:john,role:employee
-    user:admin,password:bpm,role:leader
-    */
-    private static void searchTaskAfterApplySingleton(){
+    private static void searchTask(){
         LeaveItem item;
         List<LeaveItem> items = new ArrayList<LeaveItem>();
         BPM bpm;
@@ -110,7 +82,7 @@ public class BonitaClient {
             hash = (HashMap<String, Object>) bpm.completeTask(item);
             
             item.putContentToWorkItem(hash);
-            
+            BPMContext.returnInstance(bpm);
             System.out.println("item = " + item);
 
         } catch (WorkflowException we) {
