@@ -17,6 +17,7 @@ public class LeaveItem extends WorkItem{
     
     private String leaveTotDay;
     private String leaveIssue;
+    private String approve;
     
     public LeaveItem(Item item){
         super(item);
@@ -50,6 +51,20 @@ public class LeaveItem extends WorkItem{
         this.leaveIssue = leaveIssue;
     }
     
+    /**
+     * @return the approve
+     */
+    public String getApprove() {
+        return approve;
+    }
+
+    /**
+     * @param approve the approve to set
+     */
+    public void setApprove(String approve) {
+        this.approve = approve;
+    }
+    
     public void putContentToWorkItem(HashMap<String, Object> content){
         if(content.get("leaveTotDay") != null){
             this.leaveTotDay = content.get("leaveTotDay").toString();
@@ -58,6 +73,11 @@ public class LeaveItem extends WorkItem{
         if(content.get("leaveIssue") != null){
             this.leaveIssue = content.get("leaveIssue").toString();
         }
+        
+        if(content.get("approve") != null){
+            this.approve = content.get("approve").toString();
+        }
+        
         super.putHashMapToWorkItem(content);
     }
     

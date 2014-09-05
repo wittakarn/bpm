@@ -27,8 +27,7 @@ public class BonitaBPMImpl implements BPM {
 
     public Object searchTask(WorkItem workItem) throws WorkflowException {
         try {
-            BonitaWrapper.listPendingTasks(workItem.getUserId(), workItem.getPassword());
-            return null;
+            return BonitaWrapper.listPendingTasks(workItem.getUserId(), workItem.getPassword());
         } catch (Exception e) {
             throw new WorkflowException(e);
         }

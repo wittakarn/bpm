@@ -7,6 +7,7 @@
 package com.wittakarn.bpm.bonita;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.bonitasoft.engine.api.LoginAPI;
@@ -48,10 +49,10 @@ public class BonitaWrapper {
     /**
      * The maximum number of elements retrieved by paged requests
      */
-    private static int PAGE_SIZE = 5;
+    private static int PAGE_SIZE = 100;
     
     static{
-        System.setProperty("bonita.home", "B:\\bonita");
+        System.setProperty("bonita.home", "D:\\bonita");
     }
     
     /**
@@ -60,7 +61,7 @@ public class BonitaWrapper {
      * @throws BonitaException
      *             if an exception occurs when listing the pending tasks
      */
-    public static void listPendingTasks(String user, String password) throws BonitaException {
+    public static List<HashMap<String, Object>> listPendingTasks(String user, String password) throws BonitaException {
         // login
         APISession session = doTenantLogin(user, password);
         try {
@@ -69,16 +70,11 @@ public class BonitaWrapper {
             int startIndex = 0;
             int page = 1;
             List<HumanTaskInstance> pendingTasks = null;
-            do {
-                // get the current page
-                pendingTasks = processAPI.getPendingHumanTaskInstances(session.getUserId(), startIndex, PAGE_SIZE, ActivityInstanceCriterion.LAST_UPDATE_ASC);
-                // print the current page
-                printTasksPage(page, pendingTasks, processAPI);
-
-                // got to next page
-                startIndex += PAGE_SIZE;
-                page++;
-            } while (pendingTasks.size() == PAGE_SIZE);
+            
+            // get all tasks.
+            pendingTasks = processAPI.getPendingHumanTaskInstances(session.getUserId(), startIndex, PAGE_SIZE, ActivityInstanceCriterion.LAST_UPDATE_ASC);
+            // print all tasks.
+            return generateResponseTask(page, pendingTasks, processAPI);
         } finally {
             // logout
             doTenantLogout(session);
@@ -93,7 +89,9 @@ public class BonitaWrapper {
      * @param pendingTasks
      *            the page content
      */
-    private static void printTasksPage(int page, List<HumanTaskInstance> pendingTasks, ProcessAPI processAPI) throws DataNotFoundException {
+    private static List<HashMap<String, Object>> generateResponseTask(int page, List<HumanTaskInstance> pendingTasks, ProcessAPI processAPI) throws DataNotFoundException {
+        List<HashMap<String, Object>> hashMapTasks = new ArrayList<HashMap<String, Object>>();
+        HashMap<String, Object> hashMapTask;
         if (pendingTasks.isEmpty()) {
             if (page == 1) {
                 System.out.println("There are no pending tasks!");
@@ -109,12 +107,29 @@ public class BonitaWrapper {
             stb.append(task.getRootContainerId());
             stb.append(", task name: ");
             stb.append(task.getName());
+            
+            stb.append(", state: ");
+            stb.append(task.getState());
+            stb.append(", task processDefinitionId: ");
+            stb.append(task.getProcessDefinitionId());
+            stb.append(", task ParentContainerId: ");
+            stb.append(task.getParentContainerId());
+            stb.append(", task ParentProcessInstanceId: ");
+            stb.append(task.getParentProcessInstanceId());
+            
             stb.append(", approve: ");
             stb.append(processAPI.getActivityDataInstance("approve", task.getId()).getValue());
             System.out.println(stb.toString());
             
+            hashMapTask = new HashMap<String, Object>();
+            hashMapTask.put("taskId", task.getId());
+            hashMapTask.put("taskDefinitionName", task.getName());
+            hashMapTask.put("processId", task.getProcessDefinitionId());
+            hashMapTask.put("isApprove", processAPI.getActivityDataInstance("approve", task.getId()).getValue());
+            hashMapTasks.add(hashMapTask);
         }
-
+        
+        return hashMapTasks;
     }
     
     /**

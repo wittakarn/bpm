@@ -7,11 +7,15 @@
 package com.wittakarn.bpm.oracle;
 
 import com.wittakarn.bpm.config.WorkflowConfig;
+import com.wittakarn.bpm.domain.WorkItem;
+import com.wittakarn.bpm.utils.DateUtils;
+import com.wittakarn.bpm.utils.StringUtils;
+import com.wittakarn.bpm.utils.WorkflowUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import oracle.bpel.services.workflow.IWorkflowConstants;
 import oracle.bpel.services.workflow.StaleObjectException;
 import oracle.bpel.services.workflow.WorkflowException;
@@ -22,11 +26,14 @@ import oracle.bpel.services.workflow.query.ITaskQueryService;
 import oracle.bpel.services.workflow.query.ITaskQueryService.AssignmentFilter;
 import oracle.bpel.services.workflow.repos.Ordering;
 import oracle.bpel.services.workflow.repos.Predicate;
+import oracle.bpel.services.workflow.repos.TableConstants;
 import oracle.bpel.services.workflow.task.ITaskService;
 import oracle.bpel.services.workflow.task.impl.TaskAssignee;
+import oracle.bpel.services.workflow.task.model.IdentityTypeImpl;
 import oracle.bpel.services.workflow.task.model.Task;
 import oracle.bpel.services.workflow.verification.IWorkflowContext;
 import oracle.bpm.client.BPMServiceClientFactory;
+import org.w3c.dom.Element;
 
 /**
  *
@@ -141,15 +148,34 @@ public class OracleWrapper {
             wfCtx = null;
         }
     }
+    
+    public static Object searchTask(String userId, String password) throws WorkflowException {
+        List<Task> taskList;
+        OracleWrapper wfWrapper = null;
+        IWorkflowServiceClient wfsClient = null;
+        IWorkflowContext wfCtx = null;
+        try {
+            wfWrapper = new OracleWrapper();
+            wfsClient = wfWrapper.getWorkflowServiceClient();
+            wfCtx = wfWrapper.authenticate(wfsClient, userId, password);
+            
+            taskList = queryTasks(wfCtx, wfsClient, initDisplayColumn(), null, AssignmentFilter.MY, null, null, null, 0, 0);
 
-    public List<Task> queryTasks(IWorkflowContext wfCtx, IWorkflowServiceClient wfsClient, List<String> displayColumns,
+            return prepareReturnField(wfsClient, wfCtx, taskList);
+        } catch (Exception e) {
+            throw new WorkflowException(e);
+        } finally {
+            taskList = null;
+        }
+    }
+
+    public static List<Task> queryTasks(IWorkflowContext wfCtx, IWorkflowServiceClient wfsClient, List<String> displayColumns,
             List<ITaskQueryService.OptionalInfo> optionalInfo, AssignmentFilter assignmentFilter,
             String keyword, Predicate predicate, Ordering ordering, int startRow, int endRow) throws WorkflowException {
         ITaskQueryService querySvc = null;
         try {
             querySvc = wfsClient.getTaskQueryService();
-            return querySvc.queryTasks(wfCtx, displayColumns, optionalInfo, assignmentFilter,
-                    keyword, predicate, ordering, startRow, endRow);
+            return querySvc.queryTasks(wfCtx, displayColumns, optionalInfo, assignmentFilter, keyword, predicate, ordering, startRow, endRow);
         } finally {
             querySvc = null;
         }
@@ -278,6 +304,171 @@ public class OracleWrapper {
             taskAssignee = null;
             taskAssignees = null;
             taskSrv = null;
+        }
+    }
+    
+    private static List<String> initDisplayColumn() {
+        List<String> displayColumns = new ArrayList<String>();
+        displayColumns = new ArrayList<String>();
+        displayColumns.add(TableConstants.WFTASK_TASKID_COLUMN.getName());
+        displayColumns.add(TableConstants.WFTASK_TASKNUMBER_COLUMN.getName());
+        displayColumns.add(TableConstants.WFTASK_ACTIVITYID_COLUMN.getName());
+        displayColumns.add(TableConstants.WFTASK_ACTIVITYNAME_COLUMN.getName());
+        displayColumns.add(TableConstants.WFTASK_TITLE_COLUMN.getName());
+        return displayColumns;
+    }
+    
+    private static Task getTaskObject(IWorkflowServiceClient wfSvcClient, IWorkflowContext wfCtx, String taskId) throws WorkflowException{
+        return wfSvcClient.getTaskQueryService().getTaskDetailsById(wfCtx, taskId);
+    }
+    
+    private static List<HashMap<String, Object>> prepareReturnField(
+            IWorkflowServiceClient wfSvcClient, IWorkflowContext wfCtx,
+            List<Task> taskList) throws Exception {
+        List<HashMap<String, Object>> hashs = new ArrayList<HashMap<String, Object>>();
+
+        try {
+            for (Iterator<Task> iterator = taskList.iterator(); iterator.hasNext();) {
+                Task task = (Task) iterator.next();
+                hashs.add(prepareReturnField(wfSvcClient, wfCtx, task));
+            }
+            return hashs;
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            hashs = null;
+        }
+    }
+    
+    private static HashMap<String, Object> prepareReturnField(
+            IWorkflowServiceClient wfSvcClient, IWorkflowContext wfCtx,
+            Task task) throws Exception {
+        HashMap<String, Object> hashDataReturn;
+        Element dataElement = null;
+        IdentityTypeImpl identityType = null;
+        String acquiredBy = "";
+        String state = "";
+        String substate = "";
+        boolean isGroup = false;
+
+        try {
+
+            dataElement = task.getPayloadAsElement();
+            System.out.println("dataElement= " + dataElement);
+            hashDataReturn = new HashMap<String, Object>();
+
+            hashDataReturn
+                    .put("taskId", task.getSystemAttributes().getTaskId());
+            hashDataReturn.put("taskNumber", task.getSystemAttributes()
+                    .getTaskNumber());
+            hashDataReturn.put("taskDefinitionName", task.getSystemAttributes()
+                    .getTaskDefinitionName());
+            hashDataReturn.put("compositeInstanceId", task.getSca()
+                    .getCompositeInstanceId());
+            hashDataReturn.put("compositeName", task.getSca()
+                    .getCompositeName());
+            hashDataReturn.put("compositeVersion", task.getSca()
+                    .getCompositeVersion());
+
+            // logger.info("taskName => " +
+            // task.getSystemAttributes().getTaskDefinitionName());
+            hashDataReturn.put("taskName", task.getSystemAttributes()
+                    .getTaskDefinitionName());
+
+            // substatePredicate = new
+            // Predicate(TableConstants.WFTASK_SUBSTATE_COLUMN,
+            // Predicate.OP_IS_NULL, "");
+            // substatePredicate.addClause(Predicate.OR,
+            // TableConstants.WFTASK_SUBSTATE_COLUMN, Predicate.OP_EQ,
+            // IWorkflowConstants.TASK_SUBSTATE_ACQUIRED);
+            acquiredBy = StringUtils.trim(task.getSystemAttributes()
+                    .getAcquiredBy());
+            state = StringUtils.trim(task.getSystemAttributes().getState());
+            substate = StringUtils.trim(task.getSystemAttributes()
+                    .getSubstate());
+
+            isGroup = task.getSystemAttributes().isIsGroup();
+
+            System.out.println("[TaskId="
+                    + task.getSystemAttributes().getTaskId() + "TaskNumber => "
+                    + task.getSystemAttributes().getTaskNumber() + ","
+                    + "TaskDefinitionName => "
+                    + task.getSystemAttributes().getTaskDefinitionName() + ","
+                    + "CompositeInstanceId => "
+                    + task.getSca().getCompositeInstanceId() + ","
+                    + "CompositeName => " + task.getSca().getCompositeName()
+                    + "," + "CompositeVersion => "
+                    + task.getSca().getCompositeVersion() + "," + "IsGroup: "
+                    + isGroup + "," + "AcquiredBy: " + acquiredBy + ","
+                    + "State: " + state + "," + "Substate: " + substate);
+
+            if (!task.getSystemAttributes().getAssignees().isEmpty()) {
+                identityType = (IdentityTypeImpl) task.getSystemAttributes()
+                        .getAssignees().get(0);
+
+                hashDataReturn.put("assigneesId", identityType.getId());
+                hashDataReturn.put("assigneesType", identityType.getType());
+            }
+
+            if (!isGroup) {
+                System.out.println("state => STATE_CLAIMED isGroup = "
+                        + isGroup);
+
+                identityType = (IdentityTypeImpl) task.getSystemAttributes()
+                        .getAssignees().get(0);
+
+                hashDataReturn.put("state", "STATE_CLAIMED");
+                hashDataReturn.put("owner", identityType.getId().toUpperCase());
+                hashDataReturn.put("stepClmDtm", DateUtils
+                        .toStringDateTime(task.getSystemAttributes()
+                                .getAssignedDate()));
+            } else if (substate
+                    .equals(IWorkflowConstants.TASK_SUBSTATE_ACQUIRED)) {
+                System.out
+                        .println("state => STATE_CLAIMED Substate = ACQUIRED");
+                hashDataReturn.put("state", "STATE_CLAIMED");
+                hashDataReturn.put("owner", acquiredBy);
+                if (dataElement.getElementsByTagName("stepClmDtm").item(0) != null) {
+                    hashDataReturn.put("stepClmDtm", dataElement
+                            .getElementsByTagName("stepClmDtm").item(0)
+                            .getTextContent());
+                }
+            } else {
+                System.out.println("state => STATE_READY");
+                hashDataReturn.put("state", "STATE_READY");
+                hashDataReturn.put("owner", "");
+                hashDataReturn.put("stepClmDtm", "");
+            }
+
+            // task.getSystemAttributes().getExpirationDate()
+            hashDataReturn.put("escalated", "0"); // ๏ฟฝาน๏ฟฝ๏ฟฝาช๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัง
+            // 1=๏ฟฝ๏ฟฝาช๏ฟฝ๏ฟฝ/0=๏ฟฝัง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาช๏ฟฝ๏ฟฝ
+
+            // stepArrDtm
+            hashDataReturn.put("stepArrDtm", WorkflowUtils
+                    .convertCalendarToStringDateTime(task.getSystemAttributes()
+                            .getAssignedDate()));
+
+            return hashDataReturn;
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            hashDataReturn = null;
+            dataElement = null;
+            identityType = null;
+            acquiredBy = null;
+            state = null;
+            substate = null;
+        }
+    }
+    
+    private static String getData(Element dataElement, String tagName) {
+        try {
+            return dataElement.getElementsByTagName(tagName).item(0)
+                    .getTextContent();
+        } catch (Exception e) {
+            return "";
+        } finally {
         }
     }
 }

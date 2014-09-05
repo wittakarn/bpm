@@ -38,6 +38,7 @@ public abstract class WorkItem implements Item, Serializable {
         String methodName;
         String parameterTypeName;
         String key;
+        Object hashValue;
         Method[] methodList;
 
         try {
@@ -53,12 +54,16 @@ public abstract class WorkItem implements Item, Serializable {
                         parameterTypeName = method.getParameterTypes()[0].getName();
                         key = methodName.substring(3, 4).toString().toLowerCase() + methodName.substring(4);
 
+                        hashValue = content.get(key);
+                        
+                        if(hashValue == null) continue;
+                        
                         if (parameterTypeName.equals("boolean")) {
                             if (content.get(key) != null) {
-                                method.invoke(this, Boolean.valueOf(content.get(key).toString()));
+                                method.invoke(this, Boolean.valueOf(hashValue.toString()));
                             }
-                        } else {
-                            method.invoke(this, content.get(key));
+                        } else if (parameterTypeName.equals("java.lang.String")) {
+                            method.invoke(this, hashValue.toString());
                         }
 
                     }
@@ -68,6 +73,7 @@ public abstract class WorkItem implements Item, Serializable {
 
             item.putContentToWorkItem(content);
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw new WorkflowException(ex);
         } finally {
             methodName = null;
