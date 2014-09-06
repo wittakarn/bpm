@@ -5,7 +5,7 @@
 package com.wittakarn.bpm.bonita;
 
 import com.wittakarn.bpm.domain.Item;
-import com.wittakarn.bpm.exception.WorkflowException;
+import com.wittakarn.bpm.exception.BPMException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import lombok.ToString;
@@ -26,7 +26,7 @@ public class BonitaItem implements Item{
         return itemType;
     }
 
-    public void putContentToWorkItem(HashMap<String, Object> content) throws WorkflowException {
+    public void putContentToWorkItem(HashMap<String, Object> content) throws BPMException {
         String methodName;
         String parameterTypeName;
         String key;
@@ -36,11 +36,10 @@ public class BonitaItem implements Item{
 
 
         } catch (Exception ex) {
-            throw new WorkflowException(ex);
+            throw new BPMException(ex);
         } finally {
             methodName = null;
             methodList = null;
         }
     }
-    
 }

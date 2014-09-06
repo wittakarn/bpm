@@ -9,7 +9,7 @@ import com.wittakarn.bpm.BPM;
 import com.wittakarn.bpm.bonita.BonitaItem;
 import com.wittakarn.bpm.context.BPMContext;
 import com.wittakarn.bpm.domain.LeaveItem;
-import com.wittakarn.bpm.exception.WorkflowException;
+import com.wittakarn.bpm.exception.BPMException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -55,7 +55,7 @@ public class BonitaClient {
 //            item.setTaskId("60003");
 //            bpm.getBpm().completeTask(item);
 
-        } catch (WorkflowException we) {
+        } catch (BPMException we) {
             we.printStackTrace();
         } finally {
             item = null;
@@ -85,7 +85,7 @@ public class BonitaClient {
             BPMContext.returnInstance(bpm);
             System.out.println("item = " + item);
 
-        } catch (WorkflowException we) {
+        } catch (BPMException we) {
             we.printStackTrace();
         } finally {
             hash = null;

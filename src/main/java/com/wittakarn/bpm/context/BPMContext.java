@@ -6,7 +6,7 @@ package com.wittakarn.bpm.context;
 
 import com.wittakarn.bpm.BPM;
 import com.wittakarn.bpm.domain.WorkItem;
-import com.wittakarn.bpm.exception.WorkflowException;
+import com.wittakarn.bpm.exception.BPMException;
 import com.wittakarn.bpm.oracle.OracleBPMImpl;
 import java.io.Serializable;
 import java.util.Vector;
@@ -30,13 +30,13 @@ public class BPMContext implements Serializable{
         instance.setSize(limit);
     }
 
-    public BPMContext() throws WorkflowException{
+    public BPMContext() throws BPMException{
         try {
             this.bpm = OracleBPMImpl.class.newInstance();
         } catch (InstantiationException e) {
-            throw new WorkflowException(e);
+            throw new BPMException(e);
         } catch (IllegalAccessException e) {
-            throw new WorkflowException(e);
+            throw new BPMException(e);
         }
     }
     
@@ -48,9 +48,9 @@ public class BPMContext implements Serializable{
         try{
             bpm = (BPM) Class.forName(workItem.getItem().getItemType()).newInstance();
         } catch (InstantiationException e) {
-            throw new WorkflowException(e);
+            throw new BPMException(e);
         } catch (IllegalAccessException e) {
-            throw new WorkflowException(e);
+            throw new BPMException(e);
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(BPMContext.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -76,11 +76,11 @@ public class BPMContext implements Serializable{
             
             return result;          
         } catch (InstantiationException e) {
-            throw new WorkflowException(e);
+            throw new BPMException(e);
         } catch (IllegalAccessException e) {
-            throw new WorkflowException(e);
+            throw new BPMException(e);
         } catch (ClassNotFoundException e) {
-            throw new WorkflowException(e);
+            throw new BPMException(e);
         }
     }
     

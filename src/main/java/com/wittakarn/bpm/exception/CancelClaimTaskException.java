@@ -3,7 +3,7 @@ package com.wittakarn.bpm.exception;
 import java.io.Serializable;
 
 
-public class CancelClaimTaskException extends WorkflowException implements Serializable {
+public class CancelClaimTaskException extends BPMException implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

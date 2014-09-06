@@ -3,7 +3,7 @@ package com.wittakarn.bpm.exception;
 import java.io.Serializable;
 
 
-public class UpdateTaskException extends WorkflowException implements Serializable {
+public class UpdateTaskException extends BPMException implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

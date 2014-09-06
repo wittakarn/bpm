@@ -7,7 +7,6 @@
 package com.wittakarn.bpm.oracle;
 
 import com.wittakarn.bpm.config.WorkflowConfig;
-import com.wittakarn.bpm.domain.WorkItem;
 import com.wittakarn.bpm.utils.DateUtils;
 import com.wittakarn.bpm.utils.StringUtils;
 import com.wittakarn.bpm.utils.WorkflowUtils;

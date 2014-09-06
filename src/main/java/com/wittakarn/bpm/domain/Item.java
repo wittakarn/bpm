@@ -4,7 +4,7 @@
  */
 package com.wittakarn.bpm.domain;
 
-import com.wittakarn.bpm.exception.WorkflowException;
+import com.wittakarn.bpm.exception.BPMException;
 import java.io.Serializable;
 import java.util.HashMap;
 
@@ -14,5 +14,5 @@ import java.util.HashMap;
  */
 public interface Item extends Serializable{
     public String getItemType();
-    public void putContentToWorkItem(HashMap<String, Object> content) throws WorkflowException;
+    public void putContentToWorkItem(HashMap<String, Object> content) throws BPMException;
 }
